@@ -240,6 +240,10 @@ def download():
                      download_name="Screenly_Report.pdf",
                      mimetype="application/pdf")
 
+@app.route("/test")
+def test():
+    return "App is running"
+
 # ---------------- RUN ---------------- #
 
 if __name__ == "__main__":
