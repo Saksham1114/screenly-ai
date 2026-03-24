@@ -7,36 +7,31 @@ from sklearn.metrics.pairwise import cosine_similarity
 import io
 from werkzeug.utils import secure_filename
 
-# ❌ REMOVE global SBERT import
-# from sentence_transformers import SentenceTransformer
-
 # PDF
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.lib import colors
 
 app = Flask(__name__)
+
 UPLOAD_FOLDER = "uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-# ✅ Lazy model
+# ---------------- IMPORTANT ---------------- #
+# DO NOT LOAD MODEL AT START
 model = None
 
-def get_model():
-    from sentence_transformers import SentenceTransformer
-    return SentenceTransformer('all-MiniLM-L6-v2')
+# ---------------- FAST ROOT (CRITICAL FOR RENDER) ---------------- #
 
-# ---------------- HEALTH ROUTE ---------------- #
+@app.route("/")
+def root():
+    return "🚀 Screenly App is Live"
 
 @app.route("/health")
 def health():
     return "OK"
-
-@app.route("/test")
-def test():
-    return "App is running"
 
 # ---------------- SKILLS ---------------- #
 
@@ -84,7 +79,7 @@ def generate_suggestions(missing_skills, score):
         suggestions.append("Improve projects & resume content")
 
     if score < 0.3:
-        suggestions.append("Add sections like Education, Skills, Experience")
+        suggestions.append("Add proper resume sections")
 
     if not suggestions:
         suggestions.append("Strong profile 👍")
@@ -111,17 +106,19 @@ def extract_text_from_docx(docx_path):
     except:
         return ""
 
-# ---------------- MAIN ROUTE ---------------- #
+# ---------------- MAIN APP ---------------- #
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/analyze", methods=["GET", "POST"])
 def home():
     global leaderboard_data, model
 
-    # ✅ Lazy load model
-    if model is None:
-        model = get_model()
-
     if request.method == "POST":
+
+        # ✅ LOAD MODEL ONLY HERE (FIX)
+        if model is None:
+            from sentence_transformers import SentenceTransformer
+            model = SentenceTransformer('all-MiniLM-L6-v2')
+
         job_description = request.form["job_description"]
         uploaded_files = request.files.getlist("resumes")
 
@@ -147,7 +144,6 @@ def home():
         if not resume_texts:
             return render_template("index.html", error="Upload valid files")
 
-        # ✅ SBERT
         job_embedding = model.encode([job_description])
         resume_embeddings = model.encode(resume_texts)
         similarity_scores = cosine_similarity(job_embedding, resume_embeddings)[0]
@@ -173,8 +169,7 @@ def home():
             ats = calculate_ats_score(text, jd_skills)
             ats_scores.append(ats)
 
-            final = 0.7 * similarity_scores[i] + 0.3 * ats
-            final = round(final, 2)
+            final = round(0.7 * similarity_scores[i] + 0.3 * ats, 2)
             final_scores.append(final)
 
             if final >= 0.7:
@@ -199,21 +194,18 @@ def home():
 
         leaderboard_data["Rank"] = leaderboard_data.index + 1
 
-        top_candidates = leaderboard_data.head(5)
-
-        chart_labels = top_candidates["Candidate"].tolist()
-        chart_scores = top_candidates["Final_Score"].tolist()
+        top = leaderboard_data.head(5)
 
         return render_template(
             "leaderboard.html",
             leaderboard=leaderboard_data.to_dict(orient="records"),
-            chart_labels=chart_labels,
-            chart_scores=chart_scores
+            chart_labels=top["Candidate"].tolist(),
+            chart_scores=top["Final_Score"].tolist()
         )
 
     return render_template("index.html")
 
-# ---------------- PDF DOWNLOAD ---------------- #
+# ---------------- PDF ---------------- #
 
 @app.route("/download")
 def download():
@@ -243,12 +235,9 @@ def download():
     doc.build([table])
     buffer.seek(0)
 
-    return send_file(
-        buffer,
-        as_attachment=True,
-        download_name="Screenly_Report.pdf",
-        mimetype="application/pdf"
-    )
+    return send_file(buffer, as_attachment=True,
+                     download_name="Screenly_Report.pdf",
+                     mimetype="application/pdf")
 
 # ---------------- RUN ---------------- #
 
