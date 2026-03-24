@@ -20,7 +20,14 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 # Model
-model = SentenceTransformer('all-MiniLM-L6-v2')
+model = None
+
+@app.route("/", methods=["GET", "POST"])
+def home():
+    global model
+
+    if model is None:
+        model = SentenceTransformer('all-MiniLM-L6-v2')
 
 # Skills
 SKILLS_DB = [
