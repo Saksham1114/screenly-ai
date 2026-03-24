@@ -23,6 +23,7 @@
             padding: 30px;
             border-radius: 15px;
             box-shadow: 0px 10px 25px rgba(0,0,0,0.5);
+            text-align: center;
         }
 
         textarea {
@@ -54,6 +55,7 @@
             border-radius: 10px;
             cursor: pointer;
             font-weight: bold;
+            width: 100%;
         }
 
         button:hover {
@@ -65,29 +67,52 @@
             font-size: 14px;
         }
 
+        .error {
+            color: #ef4444;
+            margin-top: 10px;
+        }
+
+        .loading {
+            display: none;
+            margin-top: 15px;
+            color: #22c55e;
+        }
     </style>
 </head>
 
 <body>
 
     <div class="container">
-        <h1> Screenly Resume Analyzer</h1>
+        <h1>🚀 Screenly Resume Analyzer</h1>
         <p class="subtitle">Upload resumes & get intelligent ranking with AI + ATS scoring</p>
 
-        <form method="POST" enctype="multipart/form-data">
+        <!-- ✅ FIXED FORM ACTION -->
+        <form action="/analyze" method="POST" enctype="multipart/form-data" onsubmit="showLoading()">
             
-            <textarea name="job_description" placeholder="Paste Job Description here..."></textarea>
+            <textarea name="job_description" placeholder="Paste Job Description here..." required></textarea>
 
             <br>
 
-            <input type="file" name="resumes" multiple>
+            <input type="file" name="resumes" multiple required>
 
             <br>
 
             <button type="submit">Analyze Resumes</button>
 
+            <div class="loading" id="loadingText">⏳ Analyzing... Please wait</div>
+
+            {% if error %}
+                <div class="error">{{ error }}</div>
+            {% endif %}
+
         </form>
     </div>
+
+    <script>
+        function showLoading() {
+            document.getElementById("loadingText").style.display = "block";
+        }
+    </script>
 
 </body>
 </html>
