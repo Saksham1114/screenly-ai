@@ -100,7 +100,7 @@ Deployed using **Render**
 
 ## 👨‍💻 Author
 
-**Saksham **
+Saksham 
 Computer Science Engineering Student
 
 ---
