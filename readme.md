@@ -61,14 +61,19 @@ Final Score = 0.7 * AI Score + 0.3 * ATS Score
 
 ## 📸 Screenshots
 
-> (Add screenshots here later)
+> <img width="1114" height="736" alt="image" src="https://github.com/user-attachments/assets/322667e1-faff-4d85-9daa-64d0ce7f5fab" />
+> <img width="1806" height="852" alt="image" src="https://github.com/user-attachments/assets/9e6e5c6a-f42e-4216-9c01-bfddc8a23261" />
+> <img width="1795" height="506" alt="image" src="https://github.com/user-attachments/assets/b8493d24-36ab-40b0-a65f-5ae6c6587778" />
+
+
+
 
 ---
 
 ## 🚀 Run Locally
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/screenly-ai.git
+git clone https://github.com/Saksham/screenly-ai.git
 cd screenly-ai
 
 pip install -r requirements.txt
