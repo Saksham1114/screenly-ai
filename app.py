@@ -6,7 +6,9 @@ import docx2txt
 from sklearn.metrics.pairwise import cosine_similarity
 import io
 from werkzeug.utils import secure_filename
-from sentence_transformers import SentenceTransformer
+
+# ❌ REMOVE global SBERT import
+# from sentence_transformers import SentenceTransformer
 
 # PDF
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
@@ -19,17 +21,25 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-# Model
+# ✅ Lazy model
 model = None
 
-@app.route("/", methods=["GET", "POST"])
-def home():
-    global model
+def get_model():
+    from sentence_transformers import SentenceTransformer
+    return SentenceTransformer('all-MiniLM-L6-v2')
 
-    if model is None:
-        model = SentenceTransformer('all-MiniLM-L6-v2')
+# ---------------- HEALTH ROUTE ---------------- #
 
-# Skills
+@app.route("/health")
+def health():
+    return "OK"
+
+@app.route("/test")
+def test():
+    return "App is running"
+
+# ---------------- SKILLS ---------------- #
+
 SKILLS_DB = [
     "python", "java", "c++", "machine learning", "deep learning",
     "nlp", "data science", "flask", "django", "react", "node.js",
@@ -38,8 +48,6 @@ SKILLS_DB = [
 ]
 
 leaderboard_data = pd.DataFrame()
-
-# ---------------- SKILLS ---------------- #
 
 def extract_skills(text):
     text = text.lower()
@@ -97,7 +105,6 @@ def extract_text_from_pdf(pdf_path):
         print(e)
     return text
 
-
 def extract_text_from_docx(docx_path):
     try:
         return docx2txt.process(docx_path)
@@ -108,7 +115,11 @@ def extract_text_from_docx(docx_path):
 
 @app.route("/", methods=["GET", "POST"])
 def home():
-    global leaderboard_data
+    global leaderboard_data, model
+
+    # ✅ Lazy load model
+    if model is None:
+        model = get_model()
 
     if request.method == "POST":
         job_description = request.form["job_description"]
@@ -136,7 +147,7 @@ def home():
         if not resume_texts:
             return render_template("index.html", error="Upload valid files")
 
-        # SBERT similarity
+        # ✅ SBERT
         job_embedding = model.encode([job_description])
         resume_embeddings = model.encode(resume_texts)
         similarity_scores = cosine_similarity(job_embedding, resume_embeddings)[0]
@@ -166,7 +177,6 @@ def home():
             final = round(final, 2)
             final_scores.append(final)
 
-            # Status
             if final >= 0.7:
                 status_list.append("Shortlisted")
             elif final >= 0.4:
@@ -174,11 +184,8 @@ def home():
             else:
                 status_list.append("Rejected")
 
-            # Suggestions
-            suggestions = generate_suggestions(missing, final)
-            suggestions_list.append(suggestions)
+            suggestions_list.append(generate_suggestions(missing, final))
 
-        # DataFrame
         leaderboard_data = pd.DataFrame({
             "Candidate": resume_names,
             "AI_Score": similarity_scores,
@@ -192,17 +199,17 @@ def home():
 
         leaderboard_data["Rank"] = leaderboard_data.index + 1
 
-        # 📊 Chart data (Top 5)
         top_candidates = leaderboard_data.head(5)
 
         chart_labels = top_candidates["Candidate"].tolist()
         chart_scores = top_candidates["Final_Score"].tolist()
 
-        return render_template("leaderboard.html",
-    leaderboard=leaderboard_data.to_dict(orient="records"),
-    chart_labels=chart_labels if chart_labels else [],
-    chart_scores=chart_scores if chart_scores else []
-)
+        return render_template(
+            "leaderboard.html",
+            leaderboard=leaderboard_data.to_dict(orient="records"),
+            chart_labels=chart_labels,
+            chart_scores=chart_scores
+        )
 
     return render_template("index.html")
 
@@ -236,13 +243,12 @@ def download():
     doc.build([table])
     buffer.seek(0)
 
-    return send_file(buffer, as_attachment=True,
-                     download_name="Screenly_Report.pdf",
-                     mimetype="application/pdf")
-
-@app.route("/test")
-def test():
-    return "App is running"
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name="Screenly_Report.pdf",
+        mimetype="application/pdf"
+    )
 
 # ---------------- RUN ---------------- #
 
