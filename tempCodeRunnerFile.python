@@ -1,0 +1,22 @@
+import mysql.connector
+
+# Connect to the database
+connection = mysql.connector.connect(
+    host='localhost',
+    user='root',
+    password='YOUR_PASSWORD',
+    database='mydatabase'
+)
+
+cursor = connection.cursor()
+
+# Insert data
+cursor.execute("INSERT INTO users (name, email) VALUES (%s, %s)", ('John Doe', 'john@example.com'))
+connection.commit()
+
+# Retrieve data
+cursor.execute("SELECT * FROM users")
+for row in cursor.fetchall():
+    print(row)
+
+connection.close()

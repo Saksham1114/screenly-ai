@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Screenly - AI Resume Analyzer</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: #0f172a;
+            color: white;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        .container {
+            width: 40%;
+            margin: auto;
+            margin-top: 80px;
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0px 10px 25px rgba(0,0,0,0.5);
+        }
+
+        textarea {
+            width: 95%;
+            height: 120px;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            margin-top: 15px;
+            background: #334155;
+            color: white;
+        }
+
+        textarea::placeholder {
+            color: #94a3b8;
+        }
+
+        input[type="file"] {
+            margin-top: 20px;
+            color: #cbd5f5;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 12px 25px;
+            background: linear-gradient(90deg, #6366f1, #22c55e);
+            border: none;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1> Screenly Resume Analyzer</h1>
+        <p class="subtitle">Upload resumes & get intelligent ranking with AI + ATS scoring</p>
+
+        <form method="POST" enctype="multipart/form-data">
+            
+            <textarea name="job_description" placeholder="Paste Job Description here..."></textarea>
+
+            <br>
+
+            <input type="file" name="resumes" multiple>
+
+            <br>
+
+            <button type="submit">Analyze Resumes</button>
+
+        </form>
+    </div>
+
+</body>
+</html>
