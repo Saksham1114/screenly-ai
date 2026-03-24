@@ -121,7 +121,7 @@
 
 <body>
 
-<h1> Screenly Resume Dashboard</h1>
+<h1>🚀 Screenly AI Resume Dashboard</h1>
 
 <div class="container">
 
@@ -208,10 +208,10 @@
     </div>
 </div>
 
-<!-- CHART SCRIPT -->
+<!-- ✅ FIXED CHART SCRIPT -->
 <script>
-const labels = {{ chart_labels | default([]) | tojson }};
-const scores = {{ chart_scores | default([]) | tojson }};
+const labels = {{ (chart_labels or []) | tojson | safe }};
+const scores = {{ (chart_scores or []) | tojson | safe }};
 
 if (labels.length > 0) {
     const ctx = document.getElementById('chart');

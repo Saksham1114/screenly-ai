@@ -27,7 +27,11 @@ model = None
 
 @app.route("/")
 def root():
-    return "🚀 Screenly App is Live"
+    return render_template("index.html")
+
+@app.route("/analyze", methods=["POST"])
+def analyze():
+    ...
 
 @app.route("/health")
 def health():
