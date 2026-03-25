@@ -43,6 +43,51 @@
         text-align: center;
     }
 
+    /* 🏆 TOP CARDS */
+    .top-cards {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+
+    .top-card {
+        flex: 1;
+        padding: 20px;
+        border-radius: 15px;
+        text-align: center;
+        color: white;
+        animation: float 3s ease-in-out infinite;
+    }
+
+    .top-card:hover {
+        transform: scale(1.05);
+    }
+
+    .rank-1 { background: linear-gradient(135deg, #22c55e, #4ade80); }
+    .rank-2 { background: linear-gradient(135deg, #6366f1, #818cf8); }
+    .rank-3 { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+
+    .badge { font-size: 28px; }
+
+    .mini-bar {
+        background: rgba(255,255,255,0.3);
+        height: 6px;
+        border-radius: 10px;
+        margin: 10px 0;
+    }
+
+    .mini-bar div {
+        height: 6px;
+        background: white;
+        border-radius: 10px;
+    }
+
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-8px); }
+        100% { transform: translateY(0px); }
+    }
+
     .chart-box {
         background: #1e293b;
         padding: 20px;
@@ -74,9 +119,7 @@
         font-size: 14px;
     }
 
-    tr:hover {
-        background: #273449;
-    }
+    tr:hover { background: #273449; }
 
     .top {
         border-left: 5px solid #22c55e;
@@ -134,15 +177,33 @@
 
         <div class="stat-card">
             <h3>Top Score</h3>
-            <p>{{ leaderboard[0]['Final_Score'] if leaderboard else 0 }}</p>
+            <p>{{ "%.2f"|format(leaderboard[0]['Final_Score']) if leaderboard else 0 }}</p>
         </div>
 
         <div class="stat-card">
             <h3>Shortlisted</h3>
-            <p>
-                {{ leaderboard | selectattr('Status', 'equalto', 'Shortlisted') | list | length }}
-            </p>
+            <p>{{ leaderboard | selectattr('Final_Score', '>', 0.75) | list | length }}</p>
         </div>
+    </div>
+
+    <!-- 🏆 TOP 3 CARDS -->
+    <div class="top-cards">
+        {% for row in leaderboard[:3] %}
+        <div class="top-card rank-{{ loop.index }}">
+            <div class="badge">
+                {% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% else %}🥉{% endif %}
+            </div>
+
+            <h3>{{ row['Candidate'] }}</h3>
+            <h2>{{ "%.2f"|format(row['Final_Score']) }}</h2>
+
+            <div class="mini-bar">
+                <div style="width: {{ row['Final_Score'] * 100 }}%"></div>
+            </div>
+
+            <p>Rank #{{ row['Rank'] }}</p>
+        </div>
+        {% endfor %}
     </div>
 
     <!-- 📊 CHART -->
@@ -164,11 +225,14 @@
 
             {% for row in leaderboard %}
 
-            {% if row['Rank'] == 1 %}
-            <tr class="top">
-            {% else %}
-            <tr>
+            {% set status = "Rejected" %}
+            {% if row['Final_Score'] >= 0.75 %}
+                {% set status = "Shortlisted" %}
+            {% elif row['Final_Score'] >= 0.5 %}
+                {% set status = "Review" %}
             {% endif %}
+
+            <tr class="{{ 'top' if row['Rank'] == 1 else '' }}">
 
                 <td>#{{ row['Rank'] }}</td>
                 <td>{{ row['Candidate'] }}</td>
@@ -181,9 +245,9 @@
                 </td>
 
                 <td>
-                    {% if row['Status'] == 'Shortlisted' %}
+                    {% if status == 'Shortlisted' %}
                         <span class="status-short">✔ Shortlisted</span>
-                    {% elif row['Status'] == 'Review' %}
+                    {% elif status == 'Review' %}
                         <span class="status-review">⚠ Review</span>
                     {% else %}
                         <span class="status-reject">✖ Rejected</span>
@@ -195,8 +259,9 @@
                     <div class="missing">❌ {{ row['Missing Skills'] or "None" }}</div>
                 </td>
 
+                <!-- ✅ FIXED AI SUGGESTIONS -->
                 <td class="suggestion">
-                    💡 {{ row['Suggestions'] }}
+                    💡 {{ suggestions[loop.index0] }}
                 </td>
 
             </tr>
@@ -208,7 +273,6 @@
     </div>
 </div>
 
-<!-- ✅ FIXED CHART SCRIPT -->
 <script>
 const labels = {{ (chart_labels or []) | tojson | safe }};
 const scores = {{ (chart_scores or []) | tojson | safe }};
@@ -221,12 +285,9 @@ if (labels.length > 0) {
         data: {
             labels: labels,
             datasets: [{
-                label: 'Top Candidates Score',
+                label: 'Final Scores',
                 data: scores
             }]
-        },
-        options: {
-            responsive: true
         }
     });
 }
