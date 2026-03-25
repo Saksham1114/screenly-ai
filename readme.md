@@ -82,6 +82,9 @@ python app.py
 
 ---
 
+## Deployment Link
+https://screenly-lite.onrender.com/
+
 ## 🎯 Future Improvements
 
 * 🧠 LLM-based resume suggestions
